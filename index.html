@@ -1,114 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>QR GPS Project</title>
+  <meta charset="UTF-8">
+  <title>QR Attendance</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="container">
->
 
-<h1>QR Code Generator with GPS 📍</h1>
+  <div class="card">
+    <h1>QR Attendance System</h1>
+    <p>Login or Create an Account</p>
 
-<input type="text" id="text" placeholder="Enter text">
-<button onclick="generateQR()">Generate QR</button>
+    <input type="text" placeholder="Full Name" id="name">
+    <input type="email" placeholder="Email" id="email">
+    <input type="password" placeholder="Password" id="password">
 
-<div id="qrcode"></div>
-<h2>Saved Data 📊</h2>
-<ul id="history"></ul>
+    <select id="role">
+      <option>Select Role</option>
+      <option>Student</option>
+      <option>Teacher</option>
+    </select>
 
-<button onclick="downloadQR()">Download QR</button>
-</div>
-
-<!-- QR Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<!-- Firebase + JS -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } 
-  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-  import { getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-      apiKey: "AIzaSyARA-1C_1fgcxLlXulgGC5Bqqumw-UpdUc",
-  authDomain: "qr-gps-project.firebaseapp.com",
-  projectId: "qr-gps-project",
-  storageBucket: "qr-gps-project.firebasestorage.app",
-  messagingSenderId: "1029124393155",
-  appId: "1:1029124393155:web:a5ab84cc47348773f77a76"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  async function generateQR() {
-    let text = document.getElementById("text").value;
-    if (!text) {
-  alert("Please enter text ❗");
-  return;
-}
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      // Save to Firebase
-      await addDoc(collection(db, "qrData"), {
-        text: text,
-        latitude: lat,
-        longitude: lon,
-        time: new Date()
-      });
-
-      loadData();
-
-     // Generate QR FIRST
-document.getElementById("qrcode").innerHTML = "";
-new QRCode(document.getElementById("qrcode"), text);
-
-// THEN alert
-alert("Saved with GPS ✅");
-    },
-    () => {
-      alert("Location permission denied ❌");
-    });
-  }
-
-window.generateQR = generateQR;
-
-
-function downloadQR() {
-  const img = document.querySelector("#qrcode img");
-
-  if (!img) {
-    alert("Generate QR first ❗");
-    return;
-  }
-
-  const link = document.createElement("a");
-  link.href = img.src;
-  link.download = "qrcode.png";
-  link.click();
-}
-
-  async function loadData() {
-  const querySnapshot = await getDocs(collection(db, "qrData"));
-
-  const history = document.getElementById("history");
-  history.innerHTML = "";
-
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-
-    const li = document.createElement("li");
-    li.innerText = `Text: ${data.text} | Lat: ${data.latitude} | Lon: ${data.longitude}`;
-
-    history.appendChild(li);
-  });
-}
-
-loadData();
-</script>
-
+    <button id="loginBtn" class="login">Login</button>
+    <button id="signupBtn" class="signup">Create Account</button>
+  </div>
+  <script type="module" src="script.js"></script>
 </body>
+
 </html>
