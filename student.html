@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Student Scanner</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    #reader {
+      width: 300px;
+      margin: auto;
+      margin-top: 30px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      background: white;
+      color: black;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+
+  <!-- 🔥 QR SCANNER LIBRARY -->
+  <script  src="https://unpkg.com/html5-qrcode"></script>
+
+</head>
+
+<body>
+
+  <h1>Scan QR for Attendance</h1>
+
+  <div id="reader"></div>
+
+  <div id="result">Scan result will appear here</div>
+
+  <script type="module" src="student.js"></script>
+</body>
+
+</html>
