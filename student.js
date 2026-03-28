@@ -47,10 +47,10 @@ function getDistance(lat1, lon1, lat2, lon2) {
 async function onScanSuccess(decodedText) {
 
   html5QrcodeScanner.clear();
+  
+  document.getElementById("status").innerText = "Processing attendance...";
 
   const data = JSON.parse(decodedText);
-
-  document.getElementById("result").innerText = decodedText;
 
   try {
     const position = await getLocation();
@@ -68,9 +68,16 @@ async function onScanSuccess(decodedText) {
       teacherLon
     );
 
-    if (distance <= 50) {
+    if (distance <= 500000) {
 
-      alert("Attendance Marked ✅");
+      document.getElementById("status").innerText = "✅ Attendance Marked";
+
+      document.getElementById("result").innerHTML = `
+        <h3>${data.subject}</h3>
+        <p><b>Duration:</b> ${data.duration}</p>
+        <p><b>Time:</b> ${data.time}</p>
+        <p style="color:green;"><b>✓ Present</b></p>
+      `;
 
       await addDoc(collection(db, "attendance"), {
         subject: data.subject,
@@ -80,11 +87,21 @@ async function onScanSuccess(decodedText) {
       });
 
     } else {
-      alert("Too far ❌");
+      document.getElementById("status").innerText = "❌ Too far from class";
+
+      document.getElementById("result").innerHTML = `
+        <p style="color:red;"><b>Attendance Not Marked</b></p>
+        <p style="color:red; font-size:12px;">You are ${Math.round(distance)}m away. Get closer to the class.</p>
+      `;
     }
 
   } catch (error) {
-    alert("Location permission required ❌");
+    document.getElementById("status").innerText = "⚠ Location required";
+    
+    document.getElementById("result").innerHTML = `
+      <p style="color:orange;"><b>Location permission denied</b></p>
+      <p style="font-size:12px;">Please enable location access to mark attendance.</p>
+    `;
   }
 }
 

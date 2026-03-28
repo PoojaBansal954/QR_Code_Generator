@@ -1,104 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <title>Teacher Dashboard</title>
-
+  <title>Teacher QR Generator</title>
   <style>
     body {
-      font-family: Arial;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      width: 300px;
+      font-family: Arial, sans-serif;
       text-align: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 50px;
     }
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    input, select, button {
+      width: 80%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
     }
 
     button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
       background: #667eea;
       color: white;
-      border: none;
-      border-radius: 6px;
       cursor: pointer;
+      transition: transform 0.3s;
     }
 
-    #qrCode {
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    #qrcode {
       margin-top: 20px;
     }
   </style>
-
-  <!-- 🔥 QR CODE LIBRARY -->
+  <!-- QR Library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
-
 </head>
-
 <body>
+  <h1>Generate QR for Attendance</h1>
 
-  <div class="card">
-    <h2>Generate QR</h2>
+  <input type="text" id="subject" placeholder="Subject">
+  <input type="text" id="duration" placeholder="Duration (e.g., 60 mins)">
+  <button id="generateQRBtn">Generate QR</button>
 
-    <input type="text" id="subject" placeholder="Subject">
-    <input type="text" id="duration" placeholder="Duration (e.g. 1 hour)">
-
-    <button id="generateBtn">Generate QR</button>
-
-    <div id="qrCode"></div>
-  </div>
+  <div id="qrcode"></div>
 
   <script>
-    document.getElementById("generateBtn").addEventListener("click", () => {
+  document.getElementById('generateQRBtn').addEventListener('click', async () => {
+  const subject = document.getElementById('subject').value;
+  const duration = document.getElementById('duration').value;
 
-      const subject = document.getElementById("subject").value;
-      const duration = document.getElementById("duration").value;
+  if (!subject || !duration) {
+    alert("Please fill both fields");
+    return;
+  }
 
-      if (!subject || !duration) {
-        alert("Please fill all fields");
-        return;
+  try {
+    // Get teacher's location
+    const position = await getLocation();
+    const teacherLat = position.coords.latitude;
+    const teacherLon = position.coords.longitude;
+
+    // Create data object
+    const qrData = {
+      subject: subject,
+      duration: duration,
+      teacherLat: teacherLat,
+      teacherLon: teacherLon
+    };
+
+    // Convert data to JSON string
+    const qrDataString = JSON.stringify(qrData);
+
+    // Clear previous QR
+    document.getElementById('qrcode').innerHTML = "";
+
+    // Generate QR
+    QRCode.toCanvas(qrDataString, function (error, canvas) {
+      if (error) {
+        console.error(error);
+        alert("QR generation failed ❌");
+      } else {
+        document.getElementById('qrcode').appendChild(canvas);
+        alert("QR Generated ✅");
       }
-
-      // 🔥 Create data for QR
-      const data = JSON.stringify({
-        subject: subject,
-        duration: duration,
-        time: new Date().toLocaleString()
-      });
-
-      // 🔥 Clear old QR
-      document.getElementById("qrCode").innerHTML = "";
-
-      // 🔥 Generate QR
-      QRCode.toCanvas(data, function (error, canvas) {
-        if (error) {
-          console.error(error);
-          alert("Error generating QR");
-        } else {
-          document.getElementById("qrCode").appendChild(canvas);
-        }
-      });
-
     });
+
+  } catch (error) {
+    alert("Location permission required ❌");
+  }
+});
+
+// ✅ OUTSIDE (IMPORTANT)
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve(position),
+      error => reject(error)
+    );
+  });
+}
   </script>
-
 </body>
-
 </html>
