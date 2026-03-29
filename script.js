@@ -1,16 +1,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+
 import {
   getFirestore,
   setDoc,
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
@@ -21,57 +22,55 @@ const firebaseConfig = {
   appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
-// Initialize Firebase
+// 🔥 INIT
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-//Create account
-window.signup = async function () {
-  const name = document.querySelector('#name').value;
-  const email = document.querySelector('#email').value;
-  const password = document.querySelector('#password').value;
+// 🎯 SIGNUP
+async function signup() {
+  const name = document.querySelector('#name').value.trim();
+  const email = document.querySelector('#email').value.trim();
+  const password = document.querySelector('#password').value.trim();
   const role = document.querySelector('#role').value;
 
   if (!name || !email || !password || role === "Select Role") {
-    alert("Please fill all fields properly");
+    alert("Please fill all fields properly ❌");
     return;
-    //       document.querySelector('#name').value = "";
-    // document.querySelector('#email').value = "";
-    // document.querySelector('#password').value = "";
   }
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    const roleLower = role.toLowerCase();
+
     await setDoc(doc(db, "users", user.uid), {
-      name: name,
-      email: email,
-      role: role
+      name,
+      email,
+      role: roleLower
     });
 
-    // alert("Account Created ✅");
+   
 
-    if (role === "Student") {
+    if (roleLower === "student") {
       window.location.href = "student.html";
-    } else if (role === "Teacher") {
+    } else {
       window.location.href = "teacher.html";
     }
+
   } catch (error) {
     alert(error.message);
   }
-};
+}
 
-document.getElementById("signupBtn").addEventListener("click", signup);
-
-//login
-window.login = async function () {
-  const email = document.querySelector('#email').value;
-  const password = document.querySelector('#password').value;
+// 🎯 LOGIN
+async function login() {
+  const email = document.querySelector('#email').value.trim();
+  const password = document.querySelector('#password').value.trim();
 
   if (!email || !password) {
-    alert("Please enter email and password");
+    alert("Enter email & password ❌");
     return;
   }
 
@@ -79,16 +78,15 @@ window.login = async function () {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Fetch user data from Firestore
     const docRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const userData = docSnap.data();
+      const role = docSnap.data().role;
 
-      if (userData.role === "Student") {
+      if (role === "student") {
         window.location.href = "student.html";
-      } else if (userData.role === "Teacher") {
+      } else {
         window.location.href = "teacher.html";
       }
     }
@@ -96,6 +94,10 @@ window.login = async function () {
   } catch (error) {
     alert(error.message);
   }
-};
+}
 
-document.getElementById("loginBtn").addEventListener("click", login);
+// ✅ WAIT FOR DOM
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("signupLink").addEventListener("click", signup);
+});

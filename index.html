@@ -18,15 +18,23 @@
     <input type="password" placeholder="Password" id="password">
 
     <select id="role">
-      <option>Select Role</option>
-      <option>Student</option>
-      <option>Teacher</option>
+      <option value="">Select Role</option>
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
     </select>
 
     <button id="loginBtn" class="login">Login</button>
-    <button id="signupBtn" class="signup">Create Account</button>
-  </div>
+
+<p class="switch-text">
+  Don't have an account? 
+  <span id="signupLink">Create Account</span>
+</p>
+
+  <!-- Status message -->
+  <p id="status" style="text-align:center; color:white; margin-top:10px;"></p>
+
   <script type="module" src="script.js"></script>
 </body>
+
 
 </html>

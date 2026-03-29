@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6f9;
+    }
+
+    /* 🔵 Sidebar */
+    .sidebar {
+      position: fixed;
+      width: 220px;
+      height: 100%;
+      background: #667eea;
+      padding: 20px;
+      color: white;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: #667eea;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .sidebar button:hover {
+      background: #ddd;
+    }
+
+    /* 🔵 Main */
+    .main {
+      margin-left: 240px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button.search {
+      background: #667eea;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    table {
+      margin: auto;
+      margin-top: 30px;
+      border-collapse: collapse;
+      width: 90%;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 🔥 SIDEBAR -->
+  <div class="sidebar">
+    <h2>Dashboard</h2>
+    <button onclick="goToStudent()">🎓 Student</button>
+    <button onclick="goToTeacher()">👩‍🏫 Teacher</button>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <!-- 🔥 MAIN -->
+  <div class="main">
+
+    <h1>Attendance Dashboard 📊</h1>
+
+    <!-- 🔍 Search -->
+    <input type="text" id="searchEmail" placeholder="Search student email">
+    <button class="search" id="searchBtn">Search</button>
+
+    <!-- 📋 Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Duration</th>
+          <th>Time</th>
+          <th>Distance</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+  </div>
+
+  <script type="module" src="attendance.js"></script>
+
+  <script>
+    function goToStudent() {
+      window.location.href = "student.html";
+    }
+
+    function goToTeacher() {
+      window.location.href = "teacher.html";
+    }
+
+    function logout() {
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>

@@ -2,107 +2,170 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Teacher QR Generator</title>
+  <title>Teacher Dashboard</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      padding: 50px;
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6f9;
     }
 
-    input, select, button {
-      width: 80%;
+    /* 🔵 Sidebar */
+    .sidebar {
+      position: fixed;
+      width: 220px;
+      height: 100%;
+      background: #764ba2;
+      padding: 20px;
+      color: white;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar button {
+      width: 100%;
       padding: 12px;
       margin: 10px 0;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      background: #667eea;
-      color: white;
+      background: white;
+      color: #764ba2;
       cursor: pointer;
-      transition: transform 0.3s;
+      font-weight: bold;
     }
 
-    button:hover {
-      transform: scale(1.05);
+    .sidebar button:hover {
+      background: #ddd;
+    }
+
+    /* 🔵 Main */
+    .main {
+      margin-left: 240px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    input {
+      width: 300px;
+      padding: 12px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .generate {
+      background: #764ba2;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
     }
 
     #qrcode {
       margin-top: 20px;
     }
   </style>
+
   <!-- QR Library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+
 </head>
+
 <body>
-  <h1>Generate QR for Attendance</h1>
 
-  <input type="text" id="subject" placeholder="Subject">
-  <input type="text" id="duration" placeholder="Duration (e.g., 60 mins)">
-  <button id="generateQRBtn">Generate QR</button>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>Teacher</h2>
+    <button onclick="goToGenerateQR()">🔳 Generate QR</button>
+    <button onclick="goToAttendance()">📊 Attendance</button>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
 
-  <div id="qrcode"></div>
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <h1>Generate QR for Attendance</h1>
+
+    <input type="text" id="subject" placeholder="Subject">
+    <input type="text" id="duration" placeholder="Duration (e.g., 60 mins)">
+    <br>
+
+    <button class="generate" id="generateQRBtn">Generate QR</button>
+
+    <div id="qrcode"></div>
+
+  </div>
 
   <script>
-  document.getElementById('generateQRBtn').addEventListener('click', async () => {
-  const subject = document.getElementById('subject').value;
-  const duration = document.getElementById('duration').value;
+    // NAVIGATION
+    // 🧭 TEACHER NAVIGATION
 
-  if (!subject || !duration) {
-    alert("Please fill both fields");
-    return;
-  }
+window.goToGenerateQR = function () {
+  window.location.href = "teacher.html";
+};
 
-  try {
-    // Get teacher's location
-    const position = await getLocation();
-    const teacherLat = position.coords.latitude;
-    const teacherLon = position.coords.longitude;
+window.goToAttendance = function () {
+  window.location.href = "attendance.html";
+};
 
-    // Create data object
-    const qrData = {
-      subject: subject,
-      duration: duration,
-      teacherLat: teacherLat,
-      teacherLon: teacherLon
-    };
+window.logout = function () {
+  window.location.href = "index.html";
+};
 
-    // Convert data to JSON string
-    const qrDataString = JSON.stringify(qrData);
+    // 📍 LOCATION FUNCTION
+    function getLocation() {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+    }
 
-    // Clear previous QR
-    document.getElementById('qrcode').innerHTML = "";
+    // 🔳 GENERATE QR
+    document.getElementById('generateQRBtn').addEventListener('click', async () => {
 
-    // Generate QR
-    QRCode.toCanvas(qrDataString, function (error, canvas) {
-      if (error) {
-        console.error(error);
-        alert("QR generation failed ❌");
-      } else {
-        document.getElementById('qrcode').appendChild(canvas);
-        alert("QR Generated ✅");
+      const subject = document.getElementById('subject').value;
+      const duration = document.getElementById('duration').value;
+
+      if (!subject || !duration) {
+        alert("Please fill both fields ❌");
+        return;
+      }
+
+      try {
+        const position = await getLocation();
+
+        const teacherLat = position.coords.latitude;
+        const teacherLon = position.coords.longitude;
+
+        const qrData = {
+          subject: subject,
+          duration: duration,
+          teacherLat: teacherLat,
+          teacherLon: teacherLon
+        };
+
+        const qrDataString = JSON.stringify(qrData);
+
+        document.getElementById('qrcode').innerHTML = "";
+
+        QRCode.toCanvas(qrDataString, function (error, canvas) {
+          if (error) {
+            console.error(error);
+            alert("QR generation failed ❌");
+          } else {
+            document.getElementById('qrcode').appendChild(canvas);
+          }
+        });
+
+      } catch (error) {
+        alert("Location permission required ❌");
       }
     });
-
-  } catch (error) {
-    alert("Location permission required ❌");
-  }
-});
-
-// ✅ OUTSIDE (IMPORTANT)
-function getLocation() {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      position => resolve(position),
-      error => reject(error)
-    );
-  });
-}
   </script>
+
 </body>
 </html>

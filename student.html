@@ -3,26 +3,55 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Student Scanner</title>
+  <title>Student Dashboard</title>
 
   <style>
     body {
+      margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
+      background: #f4f6f9;
+    }
+
+    /* 🔵 Sidebar */
+    .sidebar {
+      position: fixed;
+      width: 220px;
+      height: 100%;
+      background: #667eea;
       padding: 20px;
+      color: white;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: #667eea;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .sidebar button:hover {
+      background: #ddd;
+    }
+
+    /* 🔵 Main Content */
+    .main {
+      margin-left: 240px;
+      padding: 20px;
+      text-align: center;
     }
 
     h1 {
-      margin-bottom: 10px;
-      font-size: 32px;
-      font-weight: 600;
-    }
-
-    h2 {
-      font-size: 20px;
-      margin-top: 20px;
+      font-size: 28px;
       margin-bottom: 10px;
     }
 
@@ -37,60 +66,56 @@
 
     #status {
       margin-top: 15px;
-      font-size: 18px;
-      font-weight: 500;
-      min-height: 30px;
+      font-size: 16px;
       padding: 10px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      transition: all 0.3s ease;
+      background: #667eea;
+      color: white;
     }
 
     .result-card {
       margin-top: 20px;
       background: white;
       color: #333;
-      padding: 25px;
+      padding: 20px;
       border-radius: 15px;
       width: 320px;
       margin-left: auto;
       margin-right: auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      min-height: 100px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .result-card h3 {
-      margin: 0 0 15px 0;
-      color: #667eea;
-      font-size: 22px;
-    }
-
-    .result-card p {
-      margin: 8px 0;
-      font-size: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
   </style>
 
-  <!-- 🔥 QR SCANNER LIBRARY -->
-  <script  src="https://unpkg.com/html5-qrcode"></script>
+  <!-- QR SCANNER -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
 </head>
 
 <body>
 
-  <h1>Scan QR for Attendance</h1>
+  <!-- 🔥 SIDEBAR -->
+  <div class="sidebar">
+    <h2>Student</h2>
+    <button onclick="goToScan()">📷 Scan QR</button>
+    <button onclick="goToAttendance()">📊 Attendance</button>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
 
-  <div id="reader"></div>
+  <!-- 🔥 MAIN CONTENT -->
+  <div class="main">
 
-<h2>👤 Welcome Student</h2>
-<p id="status">Scan QR to mark attendance</p>
-<div id="result" class="result-card"></div>
+    <h1>Scan QR for Attendance</h1>
+
+    <div id="reader"></div>
+
+    <p id="status">Scan QR to mark attendance</p>
+
+    <div id="result" class="result-card"></div>
+
+  </div>
 
   <script type="module" src="student.js"></script>
+
 </body>
 
 </html>
