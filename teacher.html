@@ -4,34 +4,48 @@
   <meta charset="UTF-8">
   <title>Teacher Dashboard</title>
 
+  <!-- 🔵 INTERNAL CSS -->
   <style>
     body {
       margin: 0;
       font-family: Arial;
       background: #f4f6f9;
+      display: flex;
+      transition: 0.3s;
+    }
+
+    /* 🌙 DARK MODE */
+    body.dark {
+      background: #1e1e2f;
+      color: white;
+    }
+
+    body.dark .topbar,
+    body.dark .dropdown {
+      background: #2c2c3e;
+      color: white;
     }
 
     /* 🔵 Sidebar */
     .sidebar {
-      position: fixed;
       width: 220px;
-      height: 100%;
+      height: 100vh;
       background: #764ba2;
       padding: 20px;
       color: white;
+      position: fixed;
     }
 
     .sidebar h2 {
       text-align: center;
-      margin-bottom: 30px;
     }
 
     .sidebar button {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
-      border: none;
       border-radius: 8px;
+      border: none;
       background: white;
       color: #764ba2;
       cursor: pointer;
@@ -42,9 +56,73 @@
       background: #ddd;
     }
 
+    /* 🔵 Content */
+    .content {
+      margin-left: 240px;
+      width: 100%;
+    }
+
+    /* 🔝 Topbar */
+    .topbar {
+      height: 70px;
+      background: white;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 15px;
+      padding: 0 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* 🌙 Dark button */
+    .dark-btn {
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    /* 👤 Profile */
+    .profile {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #667eea;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    /* 📦 Dropdown */
+    .dropdown {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .dropdown p {
+      margin: 5px 0;
+    }
+
+    .dropdown button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      background: red;
+      color: white;
+      cursor: pointer;
+    }
+
     /* 🔵 Main */
     .main {
-      margin-left: 240px;
       padding: 40px;
       text-align: center;
     }
@@ -73,99 +151,51 @@
 
   <!-- QR Library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
-
 </head>
 
 <body>
 
-  <!-- SIDEBAR -->
+  <!-- 🔵 SIDEBAR -->
   <div class="sidebar">
     <h2>Teacher</h2>
     <button onclick="goToGenerateQR()">🔳 Generate QR</button>
     <button onclick="goToAttendance()">📊 Attendance</button>
-    <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <!-- MAIN CONTENT -->
-  <div class="main">
+  <!-- 🔵 CONTENT -->
+  <div class="content">
 
-    <h1>Generate QR for Attendance</h1>
+    <!-- 🔝 TOPBAR -->
+    <div class="topbar">
+      <span class="dark-btn" onclick="toggleDark()">🌙</span>
+      <div class="profile" onclick="toggleMenu()">👤</div>
+    </div>
 
-    <input type="text" id="subject" placeholder="Subject">
-    <input type="text" id="duration" placeholder="Duration (e.g., 60 mins)">
-    <br>
+    <!-- 📦 DROPDOWN -->
+    <div class="dropdown" id="menu">
+      <p id="name"></p>
+      <p id="email"></p>
+      <button onclick="logout()">Logout</button>
+    </div>
 
-    <button class="generate" id="generateQRBtn">Generate QR</button>
+    <!-- 🔵 MAIN -->
+    <div class="main">
 
-    <div id="qrcode"></div>
+      <h1>Generate QR</h1>
+
+      <input id="subject" placeholder="Subject">
+      <input id="duration" placeholder="Duration">
+
+      <button id="generateQRBtn" class="generate">Generate QR</button>
+
+      <div id="qrcode"></div>
+
+    </div>
 
   </div>
 
-  <script>
-    // NAVIGATION
-    // 🧭 TEACHER NAVIGATION
-
-window.goToGenerateQR = function () {
-  window.location.href = "teacher.html";
-};
-
-window.goToAttendance = function () {
-  window.location.href = "attendance.html";
-};
-
-window.logout = function () {
-  window.location.href = "index.html";
-};
-
-    // 📍 LOCATION FUNCTION
-    function getLocation() {
-      return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-    }
-
-    // 🔳 GENERATE QR
-    document.getElementById('generateQRBtn').addEventListener('click', async () => {
-
-      const subject = document.getElementById('subject').value;
-      const duration = document.getElementById('duration').value;
-
-      if (!subject || !duration) {
-        alert("Please fill both fields ❌");
-        return;
-      }
-
-      try {
-        const position = await getLocation();
-
-        const teacherLat = position.coords.latitude;
-        const teacherLon = position.coords.longitude;
-
-        const qrData = {
-          subject: subject,
-          duration: duration,
-          teacherLat: teacherLat,
-          teacherLon: teacherLon
-        };
-
-        const qrDataString = JSON.stringify(qrData);
-
-        document.getElementById('qrcode').innerHTML = "";
-
-        QRCode.toCanvas(qrDataString, function (error, canvas) {
-          if (error) {
-            console.error(error);
-            alert("QR generation failed ❌");
-          } else {
-            document.getElementById('qrcode').appendChild(canvas);
-          }
-        });
-
-      } catch (error) {
-        alert("Location permission required ❌");
-      }
-    });
-  </script>
+  <!-- 🔥 JS FILE -->
+  <script type="module" src="teacher.js"></script>
 
 </body>
 </html>

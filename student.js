@@ -1,10 +1,11 @@
-const Html5QrcodeScanner = window.Html5QrcodeScanner;
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+
 import {
   getFirestore,
   addDoc,
-  collection
+  collection,
+  getDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 import {
@@ -13,30 +14,52 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
+// QR Scanner
+const Html5QrcodeScanner = window.Html5QrcodeScanner;
+
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
   projectId: "attendanceusing-qrcode",
-  storageBucket: "attendanceusing-qrcode.firebasestorage.app",
-  messagingSenderId: "441995569385",
-  appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth();
+const auth = getAuth(app);
 
-//  Get location
+let currentUser = null;
+let currentName = "";
+
+// ✅ AUTH STATE
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+
+    // 🔥 Get name from Firestore
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      currentName = snap.data().name;
+    }
+
+    // 👤 Profile UI
+    document.getElementById("profileEmail").innerText = user.email;
+    document.getElementById("profileInitial").innerText =
+      user.email.charAt(0).toUpperCase();
+
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+// 📍 GET LOCATION
 function getLocation() {
   return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      position => resolve(position),
-      error => reject(error)
-    );
+    navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-// Distance calculation
+// 📏 DISTANCE CALCULATION
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const toRad = x => x * Math.PI / 180;
@@ -50,40 +73,30 @@ function getDistance(lat1, lon1, lat2, lon2) {
     Math.cos(toRad(lat2)) *
     Math.sin(dLon / 2) ** 2;
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-//  QR SUCCESS
+// ✅ QR SCAN SUCCESS
 async function onScanSuccess(decodedText) {
 
   html5QrcodeScanner.clear();
-
-  document.getElementById("status").innerText = "Processing attendance...";
+  document.getElementById("status").innerText = "Processing...";
 
   const data = JSON.parse(decodedText);
 
   try {
     const position = await getLocation();
 
-    const studentLat = position.coords.latitude;
-    const studentLon = position.coords.longitude;
-
-    //  USE DYNAMIC LOCATION FROM QR
-    const teacherLat = data.teacherLat;
-    const teacherLon = data.teacherLon;
-
     const distance = getDistance(
-      studentLat,
-      studentLon,
-      teacherLat,
-      teacherLon
+      position.coords.latitude,
+      position.coords.longitude,
+      data.teacherLat,
+      data.teacherLon
     );
 
     if (distance <= 100) {
 
-      document.getElementById("status").innerText = " Attendance Marked";
+      document.getElementById("status").innerText = "✅ Attendance Marked";
 
       document.getElementById("result").innerHTML = `
         <h3>${data.subject}</h3>
@@ -92,57 +105,59 @@ async function onScanSuccess(decodedText) {
         <p style="color:green;"><b>✓ Present</b></p>
       `;
 
-      await addDoc(collection(db, "attendance"), {
-        email: auth.currentUser.email,
-        subject: data.subject,
-        duration: data.duration,
-        time: new Date().toLocaleString(),
-        distance: distance
+      // 🔥 SAVE ATTENDANCE (UPDATED)
+     await addDoc(collection(db, "attendance"), {
+  name: currentName, // ✅ ADD THIS
+  email: currentUser.email,
+  subject: data.subject,
+  duration: data.duration,
+  time: new Date().toLocaleString(),
+  distance: distance
       });
 
     } else {
-      document.getElementById("status").innerText = "❌ Too far from class";
+      document.getElementById("status").innerText = "❌ Too far";
 
       document.getElementById("result").innerHTML = `
-        <p style="color:red;"><b>Attendance Not Marked</b></p>
-        <p style="color:red; font-size:12px;">
-          You are ${Math.round(distance)}m away.
-        </p>
+        <p style="color:red;">You are ${Math.round(distance)}m away</p>
       `;
     }
 
-  } catch (error) {
-    document.getElementById("status").innerText = "⚠ Location required";
-
-    document.getElementById("result").innerHTML = `
-      <p style="color:orange;"><b>Location permission denied</b></p>
-    `;
+  } catch {
+    document.getElementById("status").innerText = "⚠ Allow location";
   }
 }
 
-// ignore errors
-function onScanError(errorMessage) {}
-
+// 🎥 INIT SCANNER (BACK CAMERA)
 const html5QrcodeScanner = new Html5QrcodeScanner(
   "reader",
-  { fps: 10, qrbox: 250 }
+  {
+    fps: 10,
+    qrbox: 250,
+    facingMode: { exact: "environment" } // 🔥 BACK CAMERA
+  }
 );
 
-html5QrcodeScanner.render(onScanSuccess, onScanError);
+html5QrcodeScanner.render(onScanSuccess);
 
+// 🔁 NAVIGATION
+window.goToScan = () => window.location.href = "student.html";
+window.goToAttendance = () => window.location.href = "attendance.html";
 
-window.goToScan = function () {
-  window.location.href = "student.html";
+// 🚪 LOGOUT
+window.logout = async () => {
+  await signOut(auth);
+  window.location.href = "index.html";
 };
 
-window.goToAttendance = function () {
-  window.location.href = "attendance.html";
+// 🌙 DARK MODE
+window.toggleDark = () => {
+  document.body.classList.toggle("dark");
 };
 
-window.logout = function () {
-  isLoggingOut = true;
-
-  signOut(auth).then(() => {
-    window.location.href = "index.html";
-  });
+// 👤 PROFILE DROPDOWN
+window.toggleProfile = () => {
+  const dropdown = document.getElementById("profileDropdown");
+  dropdown.style.display =
+    dropdown.style.display === "block" ? "none" : "block";
 };

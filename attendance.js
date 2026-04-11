@@ -5,7 +5,9 @@ import {
   collection,
   getDocs,
   query,
-  where
+  where,
+  getDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 import {
@@ -14,25 +16,18 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-import {
-  getDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
   projectId: "attendanceusing-qrcode",
-  storageBucket: "attendanceusing-qrcode.firebasestorage.app",
-  messagingSenderId: "441995569385",
-  appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth();
+const auth = getAuth(app);
 
-//  Render table
+// 📋 TABLE RENDER
 function renderTable(snapshot) {
   const tableBody = document.getElementById("tableBody");
   tableBody.innerHTML = "";
@@ -42,7 +37,8 @@ function renderTable(snapshot) {
 
     tableBody.innerHTML += `
       <tr>
-        <td>${data.email}</td>
+        <td>${data.name || "N/A"}</td>   <!-- ✅ Name -->
+        <td>${data.email}</td>          <!-- ✅ Email -->
         <td>${data.subject}</td>
         <td>${data.duration}</td>
         <td>${data.time}</td>
@@ -52,7 +48,54 @@ function renderTable(snapshot) {
   });
 }
 
-// 👨‍🎓 Load student attendance
+// 📊 STATS CALCULATION
+function generateStats(snapshot) {
+
+  const stats = {};
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const subject = data.subject;
+
+    if (!stats[subject]) {
+      stats[subject] = { total: 0, attended: 0 };
+    }
+
+    stats[subject].attended += 1;
+  });
+
+  // ❗ Since we don’t have lectures collection,
+  // we assume total = attended (can upgrade later)
+  Object.keys(stats).forEach(sub => {
+    stats[sub].total = stats[sub].attended;
+  });
+
+  renderStats(stats);
+}
+
+// 🎯 RENDER STATS UI
+function renderStats(stats) {
+  const container = document.getElementById("statsContainer");
+  container.innerHTML = "";
+
+  for (let subject in stats) {
+    const { total, attended } = stats[subject];
+
+    const percent = total === 0 ? 0 :
+      Math.round((attended / total) * 100);
+
+    container.innerHTML += `
+      <div class="card">
+        <h3>${subject}</h3>
+        <p>Total: ${total}</p>
+        <p>Attended: ${attended}</p>
+        <p><b>${percent}%</b></p>
+      </div>
+    `;
+  }
+}
+
+// 👨‍🎓 STUDENT DATA
 async function loadStudent(email) {
   const q = query(
     collection(db, "attendance"),
@@ -60,16 +103,20 @@ async function loadStudent(email) {
   );
 
   const snapshot = await getDocs(q);
+
   renderTable(snapshot);
+  generateStats(snapshot);
 }
 
-// Load all (teacher)
+// 👩‍🏫 TEACHER DATA
 async function loadAll() {
   const snapshot = await getDocs(collection(db, "attendance"));
+
   renderTable(snapshot);
+  generateStats(snapshot);
 }
 
-//  AUTH CHECK + ROLE DETECTION
+// 🔐 AUTH + PROFILE
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -77,7 +124,12 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // 🔍 Get role from Firestore
+  // 👤 Profile UI
+  document.getElementById("profileEmail").innerText = user.email;
+  document.getElementById("profileInitial").innerText =
+    user.email.charAt(0).toUpperCase();
+
+  // 🔍 Role check
   const docRef = doc(db, "users", user.uid);
   const docSnap = await getDoc(docRef);
 
@@ -85,21 +137,20 @@ onAuthStateChanged(auth, async (user) => {
 
   const role = docSnap.data().role;
 
-  
   if (role === "student") {
+
     loadStudent(user.email);
 
-    // hide search for students
+    // hide search
     document.getElementById("searchEmail").style.display = "none";
     document.getElementById("searchBtn").style.display = "none";
 
-  } else if (role === "teacher") {
+  } else {
     loadAll();
   }
-
 });
 
-// 🔍 SEARCH (Teacher only)
+// 🔍 SEARCH (Teacher)
 document.getElementById("searchBtn").addEventListener("click", async () => {
 
   const email = document.getElementById("searchEmail").value;
@@ -115,10 +166,12 @@ document.getElementById("searchBtn").addEventListener("click", async () => {
   );
 
   const snapshot = await getDocs(q);
+
   renderTable(snapshot);
+  generateStats(snapshot);
 });
 
-//  LOGOUT
+// 🚪 LOGOUT
 window.logout = async function () {
   await signOut(auth);
   window.location.href = "index.html";
