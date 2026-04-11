@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Teacher Dashboard</title>
 
-  <!-- 🔵 INTERNAL CSS -->
   <style>
     body {
       margin: 0;
@@ -14,7 +13,6 @@
       transition: 0.3s;
     }
 
-    /* 🌙 DARK MODE */
     body.dark {
       background: #1e1e2f;
       color: white;
@@ -26,7 +24,6 @@
       color: white;
     }
 
-    /* 🔵 Sidebar */
     .sidebar {
       width: 220px;
       height: 100vh;
@@ -56,13 +53,11 @@
       background: #ddd;
     }
 
-    /* 🔵 Content */
     .content {
       margin-left: 240px;
       width: 100%;
     }
 
-    /* 🔝 Topbar */
     .topbar {
       height: 70px;
       background: white;
@@ -74,13 +69,11 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    /* 🌙 Dark button */
     .dark-btn {
       cursor: pointer;
       font-size: 18px;
     }
 
-    /* 👤 Profile */
     .profile {
       width: 40px;
       height: 40px;
@@ -94,7 +87,6 @@
       font-size: 18px;
     }
 
-    /* 📦 Dropdown */
     .dropdown {
       position: absolute;
       top: 70px;
@@ -121,7 +113,6 @@
       cursor: pointer;
     }
 
-    /* 🔵 Main */
     .main {
       padding: 40px;
       text-align: center;
@@ -155,30 +146,25 @@
 
 <body>
 
-  <!-- 🔵 SIDEBAR -->
   <div class="sidebar">
     <h2>Teacher</h2>
     <button onclick="goToGenerateQR()">🔳 Generate QR</button>
     <button onclick="goToAttendance()">📊 Attendance</button>
   </div>
 
-  <!-- 🔵 CONTENT -->
   <div class="content">
 
-    <!-- 🔝 TOPBAR -->
     <div class="topbar">
       <span class="dark-btn" onclick="toggleDark()">🌙</span>
       <div class="profile" onclick="toggleMenu()">👤</div>
     </div>
 
-    <!-- 📦 DROPDOWN -->
     <div class="dropdown" id="menu">
       <p id="name"></p>
       <p id="email"></p>
       <button onclick="logout()">Logout</button>
     </div>
 
-    <!-- 🔵 MAIN -->
     <div class="main">
 
       <h1>Generate QR</h1>
@@ -194,7 +180,6 @@
 
   </div>
 
-  <!-- 🔥 JS FILE -->
   <script type="module" src="teacher.js"></script>
 
 </body>

@@ -15,7 +15,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 
-// 🔥 Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -25,13 +24,11 @@ const firebaseConfig = {
   appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
-// INIT
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 
-// 🔐 AUTH CHECK + PROFILE LOAD
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -47,32 +44,27 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 
-// 🧭 NAVIGATION
 window.goToGenerateQR = () => window.location.href = "teacher.html";
 window.goToAttendance = () => window.location.href = "attendance.html";
 
 
-// 🚪 LOGOUT
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
 };
 
 
-// 🌙 DARK MODE
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
 
-// 📦 DROPDOWN
 window.toggleMenu = () => {
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display === "block" ? "none" : "block";
 };
 
 
-// 📍 LOCATION
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
@@ -80,7 +72,6 @@ function getLocation() {
 }
 
 
-// 🔳 GENERATE QR + SAVE LECTURE
 document.getElementById("generateQRBtn").addEventListener("click", async () => {
 
   const subject = document.getElementById("subject").value;
@@ -101,7 +92,6 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       teacherLon: position.coords.longitude
     };
 
-    // ✅ SAVE LECTURE
     await addDoc(collection(db, "lectures"), {
       subject,
       duration,

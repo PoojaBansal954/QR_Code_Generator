@@ -16,7 +16,6 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -27,7 +26,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 📋 TABLE RENDER
+let currentUser = null;
+
 function renderTable(snapshot) {
   const tableBody = document.getElementById("tableBody");
   tableBody.innerHTML = "";
@@ -37,65 +37,82 @@ function renderTable(snapshot) {
 
     tableBody.innerHTML += `
       <tr>
-        <td>${data.name || "N/A"}</td>   <!-- ✅ Name -->
-        <td>${data.email}</td>          <!-- ✅ Email -->
+        <td>${data.name || "N/A"}</td>
+        <td>${data.email}</td>
         <td>${data.subject}</td>
         <td>${data.duration}</td>
         <td>${data.time}</td>
-        <td>${Math.round(data.distance)} m</td>
+        <td>${Math.round(data.distance || 0)} m</td>
       </tr>
     `;
   });
 }
 
-// 📊 STATS CALCULATION
 function generateStats(snapshot) {
 
   const stats = {};
+  let totalLectures = 0;
+  let totalAttended = 0;
 
   snapshot.forEach(doc => {
     const data = doc.data();
     const subject = data.subject;
 
+    totalLectures++;
+    totalAttended++;
+
     if (!stats[subject]) {
       stats[subject] = { total: 0, attended: 0 };
     }
 
-    stats[subject].attended += 1;
+    stats[subject].total++;
+    stats[subject].attended++;
   });
 
-  // ❗ Since we don’t have lectures collection,
-  // we assume total = attended (can upgrade later)
-  Object.keys(stats).forEach(sub => {
-    stats[sub].total = stats[sub].attended;
-  });
-
-  renderStats(stats);
+  renderStats(stats, totalLectures, totalAttended);
 }
 
-// 🎯 RENDER STATS UI
-function renderStats(stats) {
+function renderStats(stats, totalLectures, totalAttended) {
+
   const container = document.getElementById("statsContainer");
   container.innerHTML = "";
+
+  const percent = totalLectures === 0 ? 0 :
+    Math.round((totalAttended / totalLectures) * 100);
+
+  container.innerHTML += `
+    <div class="card">
+      <h3>Total Lectures</h3>
+      <p>${totalLectures}</p>
+    </div>
+
+    <div class="card">
+      <h3>Attended</h3>
+      <p>${totalAttended}</p>
+    </div>
+
+    <div class="card">
+      <h3>Attendance %</h3>
+      <p>${percent}%</p>
+    </div>
+  `;
 
   for (let subject in stats) {
     const { total, attended } = stats[subject];
 
-    const percent = total === 0 ? 0 :
+    const p = total === 0 ? 0 :
       Math.round((attended / total) * 100);
 
     container.innerHTML += `
       <div class="card">
-        <h3>${subject}</h3>
-        <p>Total: ${total}</p>
-        <p>Attended: ${attended}</p>
-        <p><b>${percent}%</b></p>
+        <h4>${subject}</h4>
+        <p>${attended} / ${total}</p>
+        <p>${p}%</p>
       </div>
     `;
   }
 }
 
-// 👨‍🎓 STUDENT DATA
 async function loadStudent(email) {
   const q = query(
     collection(db, "attendance"),
@@ -108,7 +125,6 @@ async function loadStudent(email) {
   generateStats(snapshot);
 }
 
-// 👩‍🏫 TEACHER DATA
 async function loadAll() {
   const snapshot = await getDocs(collection(db, "attendance"));
 
@@ -116,7 +132,6 @@ async function loadAll() {
   generateStats(snapshot);
 }
 
-// 🔐 AUTH + PROFILE
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -124,14 +139,15 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // 👤 Profile UI
-  document.getElementById("profileEmail").innerText = user.email;
-  document.getElementById("profileInitial").innerText =
-    user.email.charAt(0).toUpperCase();
+  currentUser = user;
 
-  // 🔍 Role check
-  const docRef = doc(db, "users", user.uid);
-  const docSnap = await getDoc(docRef);
+  const emailEl = document.getElementById("profileEmail");
+  const initialEl = document.getElementById("profileInitial");
+
+  if (emailEl) emailEl.innerText = user.email;
+  if (initialEl) initialEl.innerText = user.email.charAt(0).toUpperCase();
+
+  const docSnap = await getDoc(doc(db, "users", user.uid));
 
   if (!docSnap.exists()) return;
 
@@ -141,37 +157,42 @@ onAuthStateChanged(auth, async (user) => {
 
     loadStudent(user.email);
 
-    // hide search
-    document.getElementById("searchEmail").style.display = "none";
-    document.getElementById("searchBtn").style.display = "none";
+    // hide search safely
+    const searchInput = document.getElementById("searchEmail");
+    const searchBtn = document.getElementById("searchBtn");
+
+    if (searchInput) searchInput.style.display = "none";
+    if (searchBtn) searchBtn.style.display = "none";
 
   } else {
     loadAll();
   }
 });
 
-// 🔍 SEARCH (Teacher)
-document.getElementById("searchBtn").addEventListener("click", async () => {
+const searchBtn = document.getElementById("searchBtn");
 
-  const email = document.getElementById("searchEmail").value;
+if (searchBtn) {
+  searchBtn.addEventListener("click", async () => {
 
-  if (!email) {
-    alert("Enter email");
-    return;
-  }
+    const email = document.getElementById("searchEmail").value;
 
-  const q = query(
-    collection(db, "attendance"),
-    where("email", "==", email)
-  );
+    if (!email) {
+      alert("Enter email");
+      return;
+    }
 
-  const snapshot = await getDocs(q);
+    const q = query(
+      collection(db, "attendance"),
+      where("email", "==", email)
+    );
 
-  renderTable(snapshot);
-  generateStats(snapshot);
-});
+    const snapshot = await getDocs(q);
 
-// 🚪 LOGOUT
+    renderTable(snapshot);
+    generateStats(snapshot);
+  });
+}
+
 window.logout = async function () {
   await signOut(auth);
   window.location.href = "index.html";

@@ -14,7 +14,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -24,15 +23,12 @@ const firebaseConfig = {
   appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
-// 🔥 Initialize
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 
-// ======================
-// 🎯 SIGNUP FUNCTION
-// ======================
+//  SIGNUP FUNCTION
 async function signup() {
 
   const name = document.getElementById("name").value.trim();
@@ -42,7 +38,6 @@ async function signup() {
 
   const status = document.getElementById("status");
 
-  // Validation
   if (!name || !email || !password || !role) {
     status.innerText = "⚠ Please fill all fields";
     return;
@@ -63,7 +58,6 @@ async function signup() {
 
     status.innerText = "✅ Account created successfully";
 
-    // Redirect
     if (role === "student") {
       window.location.href = "student.html";
     } else {
@@ -75,10 +69,6 @@ async function signup() {
   }
 }
 
-
-// ======================
-// 🎯 LOGIN FUNCTION
-// ======================
 async function login() {
 
   const email = document.getElementById("email").value.trim();
@@ -104,7 +94,7 @@ async function login() {
     if (docSnap.exists()) {
       const userData = docSnap.data();
 
-      status.innerText = "✅ Login successful";
+      status.innerText = " Login successful";
 
       if (userData.role === "student") {
         window.location.href = "student.html";
@@ -119,12 +109,7 @@ async function login() {
 }
 
 
-// ======================
-// 🎯 EVENT LISTENERS
-// ======================
 
-// Login button
 document.getElementById("loginBtn").addEventListener("click", login);
 
-// Create Account (span click)
 document.getElementById("signupLink").addEventListener("click", signup);

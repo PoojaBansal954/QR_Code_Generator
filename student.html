@@ -13,7 +13,6 @@
       display: flex;
     }
 
-    /* 🔵 Sidebar */
     .sidebar {
       width: 220px;
       height: 100vh;
@@ -44,13 +43,11 @@
       background: #ddd;
     }
 
-    /* 🔵 Content */
     .content {
       margin-left: 240px;
       width: 100%;
     }
 
-    /* 🔝 Topbar */
     .topbar {
       height: 70px;
       background: white;
@@ -62,7 +59,6 @@
       position: relative;
     }
 
-    /* 🌙 Dark button */
     .dark-btn {
       font-size: 20px;
       cursor: pointer;
@@ -83,7 +79,6 @@
       font-weight: bold;
     }
 
-    /* 📦 Dropdown */
     .dropdown {
       position: absolute;
       top: 70px;
@@ -113,7 +108,6 @@
       cursor: pointer;
     }
 
-    /* 🔵 Main */
     .main {
       padding: 30px;
       text-align: center;
@@ -123,7 +117,6 @@
       margin-bottom: 10px;
     }
 
-    /* 📷 Scanner */
     #reader {
       width: 300px;
       margin: auto;
@@ -186,7 +179,7 @@
 
 <body>
 
-  <!-- 🔥 SIDEBAR -->
+  <!-- SIDEBAR -->
   <div class="sidebar">
     <h2>Student</h2>
     <button onclick="goToScan()">📷 Scan QR</button>
@@ -194,22 +187,18 @@
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <!-- 🔥 CONTENT -->
   <div class="content">
 
-    <!-- 🔝 TOPBAR -->
     <div class="topbar">
       <span class="dark-btn" onclick="toggleDark()">🌙</span>
       <div class="profile" id="profileInitial" onclick="toggleProfile()">U</div>
     </div>
 
-    <!-- 👤 DROPDOWN -->
     <div class="dropdown" id="profileDropdown">
       <p id="profileEmail"></p>
       <button onclick="logout()">Logout</button>
     </div>
 
-    <!-- 🔥 MAIN -->
     <div class="main">
 
       <h1>Scan QR for Attendance</h1>
