@@ -14,7 +14,6 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -25,12 +24,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔐 GLOBAL STATE
 let currentUser = null;
 
-// =========================
-// 🔐 AUTH + ROLE PROTECTION
-// =========================
+// AUTH 
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -50,58 +47,50 @@ onAuthStateChanged(auth, async (user) => {
   const data = snap.data();
   const role = data.role?.toLowerCase().trim();
 
-  // ❌ Block students
   if (role !== "teacher") {
     window.location.href = "student.html";
     return;
   }
 
-  // 👤 UI
   document.getElementById("name").innerText = data.name;
   document.getElementById("email").innerText = data.email;
 });
 
-// =========================
-// 🔁 NAVIGATION
-// =========================
+//  NAVIGATION
+
 window.goToGenerateQR = () => window.location.href = "teacher.html";
 window.goToAttendance = () => window.location.href = "attendance.html";
 
-// =========================
-// 🚪 LOGOUT
-// =========================
+// LOGOUT
+
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
 };
 
-// =========================
-// 🌙 DARK MODE
-// =========================
+//  DARK MODE
+
+
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
-// =========================
-// 👤 DROPDOWN MENU
-// =========================
+//  DROPDOWN MENU
 window.toggleMenu = () => {
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display === "block" ? "none" : "block";
 };
 
-// =========================
-// 📍 GET LOCATION
-// =========================
+//  GET LOCATION
+
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-// =========================
-// ⏳ QR EXPIRY TIMER (NEW)
-// =========================
+//  QR EXPIRY TIMER 
+
 let qrTimeout = null;
 
 function startExpiryTimer(expiryTime) {
@@ -127,16 +116,15 @@ function startExpiryTimer(expiryTime) {
   }, 1000);
 }
 
-// =========================
-// 🎯 GENERATE QR
-// =========================
+//  GENERATE QR
+
 document.getElementById("generateQRBtn").addEventListener("click", async () => {
 
   const subject = document.getElementById("subject").value.trim();
   const duration = document.getElementById("duration").value.trim();
 
   if (!subject || !duration) {
-    alert("Please fill all fields ❌");
+    alert("Please fill all fields ");
     return;
   }
 
@@ -144,7 +132,6 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
 
     const position = await getLocation();
 
-    // ⏳ Expiry: 2 minutes
     const expiryTime = Date.now() + 2 * 60 * 1000;
 
     const qrData = {
@@ -155,7 +142,7 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       expiry: expiryTime // 🔥 IMPORTANT
     };
 
-    // 🔥 Save lecture
+    //  Save lecture
     await addDoc(collection(db, "lectures"), {
       subject,
       duration,
@@ -164,7 +151,7 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       expiry: expiryTime
     });
 
-    // 🎥 Generate QR
+    // Generate QR
     document.getElementById("qrcode").innerHTML = "";
 
     QRCode.toCanvas(JSON.stringify(qrData), (err, canvas) => {
@@ -173,7 +160,7 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       }
     });
 
-    // ⏳ Start timer UI
+    //  Start timer UI
     startExpiryTimer(expiryTime);
 
   } catch (err) {

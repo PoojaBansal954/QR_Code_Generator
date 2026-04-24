@@ -13,7 +13,7 @@ import {
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 🔥 Firebase Config
+//  Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -28,7 +28,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/f
 
 onAuthStateChanged(auth, async (user) => {
 
-  // ❌ If NOT logged in → stay on login page
+  //  If NOT logged in → stay on login page
   if (!user) return;
 
   const snap = await getDoc(doc(db, "users", user.uid));
@@ -41,7 +41,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const currentPage = window.location.pathname;
 
-  // ✅ ONLY redirect if user is on login page
+  // ONLY redirect if user is on login page
   if (currentPage.includes("index.html") || currentPage === "/") {
 
     if (role === "student") {
@@ -53,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// 🔄 MODE CONTROL
+//  MODE CONTROL
 let isSignup = false;
 
 // UI Elements
@@ -66,7 +66,7 @@ const loginBtn = document.getElementById("loginBtn");
 const signupLink = document.getElementById("signupLink");
 
 // =========================
-// 🔄 TOGGLE LOGIN / SIGNUP
+//  TOGGLE LOGIN / SIGNUP
 // =========================
 signupLink.addEventListener("click", () => {
 
@@ -87,9 +87,9 @@ signupLink.addEventListener("click", () => {
   status.innerText = "";
 });
 
-// =========================
-// 🚀 MAIN BUTTON (LOGIN / SIGNUP)
-// =========================
+// MAIN BUTTON (LOGIN / SIGNUP)
+
+
 loginBtn.addEventListener("click", async () => {
 
   const email = emailField.value.trim();
@@ -102,9 +102,8 @@ loginBtn.addEventListener("click", async () => {
 
   try {
 
-    // =========================
-    // 🔐 SIGNUP FLOW
-    // =========================
+    //  SIGNUP 
+
     if (isSignup) {
 
       const name = nameField.value.trim();
@@ -125,7 +124,6 @@ loginBtn.addEventListener("click", async () => {
         role: role
       });
 
-      status.innerText = "✅ Account created";
 
       // Redirect
       if (role === "student") {
@@ -138,9 +136,7 @@ loginBtn.addEventListener("click", async () => {
 
     }
 
-    // =========================
-    // 🔐 LOGIN FLOW
-    // =========================
+    //  LOGIN 
     else {
 
       const userCred = await signInWithEmailAndPassword(auth, email, password);
@@ -155,9 +151,7 @@ loginBtn.addEventListener("click", async () => {
 
       const role = snap.data().role?.toLowerCase().trim();
 
-      status.innerText = "✅ Login successful";
 
-      // 🔥 STRICT ROLE CHECK
       if (role === "student") {
         window.location.href = "student.html";
 

@@ -14,7 +14,6 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -25,15 +24,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔐 GLOBAL STATE
 let currentUser = null;
 let currentName = "";
 let html5QrCode = null;
 let scanning = false;
 
-// =========================
-// 🔐 AUTH + ROLE PROTECTION
-// =========================
+//  AUTH + ROLE PROTECTION
+// 
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -53,7 +50,6 @@ onAuthStateChanged(auth, async (user) => {
   const data = snap.data();
   const role = data.role?.toLowerCase().trim();
 
-  // ❌ Block teacher
   if (role !== "student") {
     window.location.href = "teacher.html";
     return;
@@ -61,18 +57,13 @@ onAuthStateChanged(auth, async (user) => {
 
   currentName = data.name || "User";
 
-  // 👤 Profile UI
   document.getElementById("profileEmail").innerText = user.email;
   document.getElementById("profileInitial").innerText =
     user.email.charAt(0).toUpperCase();
 
-  // 🎥 Start scanner
   startScanner();
 });
 
-// =========================
-// 🎥 START SCANNER (BACK CAMERA)
-// =========================
 async function startScanner() {
 
   if (scanning) return;
@@ -89,7 +80,6 @@ async function startScanner() {
 
     console.log("Cameras:", devices);
 
-    // 🔥 Prefer BACK camera
     const backCamera =
       devices.find(d =>
         d.label.toLowerCase().includes("back") ||
@@ -115,9 +105,6 @@ async function startScanner() {
   }
 }
 
-// =========================
-// 🧠 QR SUCCESS HANDLER
-// =========================
 async function onScanSuccess(decodedText) {
 
   if (!scanning) return;
@@ -127,7 +114,7 @@ async function onScanSuccess(decodedText) {
   try {
     document.getElementById("status").innerText = "Processing...";
 
-    // 🔥 Stop scanner after scan
+    // Stop scanner after scan
     await html5QrCode.stop();
     await html5QrCode.clear();
 
@@ -142,16 +129,14 @@ async function onScanSuccess(decodedText) {
       data.teacherLon
     );
 
-    // ❌ Distance check
     if (distance > 100) {
       document.getElementById("status").innerText =
-        `❌ Too far (${Math.round(distance)}m)`;
+        ` Too far (${Math.round(distance)}m)`;
 
       restartScanner();
       return;
     }
 
-    // ✅ SUCCESS UI
     document.getElementById("status").innerText = "✅ Attendance Marked";
 
     document.getElementById("result").innerHTML = `
@@ -160,7 +145,6 @@ async function onScanSuccess(decodedText) {
       <p style="color:green;"><b>✔ Present</b></p>
     `;
 
-    // 🔥 SAVE TO FIRESTORE
     await addDoc(collection(db, "attendance"), {
       name: currentName,
       email: currentUser.email,
@@ -178,9 +162,6 @@ async function onScanSuccess(decodedText) {
   }
 }
 
-// =========================
-// 🔁 RESTART SCANNER
-// =========================
 function restartScanner() {
   setTimeout(() => {
     scanning = false;
@@ -188,18 +169,12 @@ function restartScanner() {
   }, 2000);
 }
 
-// =========================
-// 📍 LOCATION
-// =========================
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-// =========================
-// 📏 DISTANCE CALCULATION
-// =========================
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const toRad = x => x * Math.PI / 180;
@@ -216,31 +191,24 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// =========================
-// 🔁 NAVIGATION
-// =========================
+// NAVIGATION
+
 window.goToAttendance = () => {
   window.location.href = "attendance.html";
 };
 
-// =========================
-// 🚪 LOGOUT
-// =========================
+//  LOGOUT
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
 };
 
-// =========================
-// 🌙 DARK MODE
-// =========================
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
-// =========================
-// 👤 PROFILE DROPDOWN
-// =========================
+// PROFILE DROPDOWN
+
 window.toggleProfile = () => {
   const dropdown = document.getElementById("profileDropdown");
   dropdown.style.display =
