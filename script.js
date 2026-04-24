@@ -13,68 +13,87 @@ import {
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
   projectId: "attendanceusing-qrcode",
-  storageBucket: "attendanceusing-qrcode.firebasestorage.app",
-  messagingSenderId: "441995569385",
-  appId: "1:441995569385:web:a74f13831444e62d42a878"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-//  SIGNUP FUNCTION
-async function signup() {
+onAuthStateChanged(auth, async (user) => {
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const role = document.getElementById("role").value;
+  // ❌ If NOT logged in → stay on login page
+  if (!user) return;
 
-  const status = document.getElementById("status");
+  const snap = await getDoc(doc(db, "users", user.uid));
 
-  if (!name || !email || !password || !role) {
-    status.innerText = "⚠ Please fill all fields";
-    return;
-  }
+  if (!snap.exists()) return;
 
-  try {
-    status.innerText = "⏳ Creating account...";
+  const role = snap.data().role?.toLowerCase().trim();
 
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+  console.log("AUTO LOGIN ROLE:", role);
 
-    // Save user data
-    await setDoc(doc(db, "users", user.uid), {
-      name: name,
-      email: email,
-      role: role
-    });
+  const currentPage = window.location.pathname;
 
-    status.innerText = "✅ Account created successfully";
+  // ✅ ONLY redirect if user is on login page
+  if (currentPage.includes("index.html") || currentPage === "/") {
 
     if (role === "student") {
       window.location.href = "student.html";
-    } else {
+
+    } else if (role === "teacher") {
       window.location.href = "teacher.html";
     }
-
-  } catch (error) {
-    status.innerText = error.message;
   }
-}
+});
 
-async function login() {
+// 🔄 MODE CONTROL
+let isSignup = false;
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+// UI Elements
+const nameField = document.getElementById("name");
+const roleField = document.getElementById("role");
+const emailField = document.getElementById("email");
+const passwordField = document.getElementById("password");
+const status = document.getElementById("status");
+const loginBtn = document.getElementById("loginBtn");
+const signupLink = document.getElementById("signupLink");
 
-  const status = document.getElementById("status");
+// =========================
+// 🔄 TOGGLE LOGIN / SIGNUP
+// =========================
+signupLink.addEventListener("click", () => {
+
+  isSignup = !isSignup;
+
+  if (isSignup) {
+    nameField.style.display = "block";
+    roleField.style.display = "block";
+    loginBtn.innerText = "Create Account";
+    signupLink.innerText = "Already have an account? Login";
+  } else {
+    nameField.style.display = "none";
+    roleField.style.display = "none";
+    loginBtn.innerText = "Login";
+    signupLink.innerText = "Don't have an account? Create Account";
+  }
+
+  status.innerText = "";
+});
+
+// =========================
+// 🚀 MAIN BUTTON (LOGIN / SIGNUP)
+// =========================
+loginBtn.addEventListener("click", async () => {
+
+  const email = emailField.value.trim();
+  const password = passwordField.value.trim();
 
   if (!email || !password) {
     status.innerText = "⚠ Enter email & password";
@@ -82,34 +101,76 @@ async function login() {
   }
 
   try {
-    status.innerText = "⏳ Logging in...";
 
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    // =========================
+    // 🔐 SIGNUP FLOW
+    // =========================
+    if (isSignup) {
 
-    // Get user role
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+      const name = nameField.value.trim();
+      const role = roleField.value.trim().toLowerCase();
 
-    if (docSnap.exists()) {
-      const userData = docSnap.data();
+      if (!name || !role) {
+        status.innerText = "⚠ Fill all fields";
+        return;
+      }
 
-      status.innerText = " Login successful";
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
 
-      if (userData.role === "student") {
+      // Save user in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: name,
+        email: email,
+        role: role
+      });
+
+      status.innerText = "✅ Account created";
+
+      // Redirect
+      if (role === "student") {
         window.location.href = "student.html";
-      } else {
+      } else if (role === "teacher") {
         window.location.href = "teacher.html";
+      } else {
+        status.innerText = "❌ Invalid role";
+      }
+
+    }
+
+    // =========================
+    // 🔐 LOGIN FLOW
+    // =========================
+    else {
+
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      const snap = await getDoc(doc(db, "users", user.uid));
+
+      if (!snap.exists()) {
+        status.innerText = "❌ User data missing";
+        return;
+      }
+
+      const role = snap.data().role?.toLowerCase().trim();
+
+      status.innerText = "✅ Login successful";
+
+      // 🔥 STRICT ROLE CHECK
+      if (role === "student") {
+        window.location.href = "student.html";
+
+      } else if (role === "teacher") {
+        window.location.href = "teacher.html";
+
+      } else {
+        status.innerText = "❌ Invalid role in database";
       }
     }
 
   } catch (error) {
     status.innerText = error.message;
   }
-}
 
-
-
-document.getElementById("loginBtn").addEventListener("click", login);
-
-document.getElementById("signupLink").addEventListener("click", signup);
+});
