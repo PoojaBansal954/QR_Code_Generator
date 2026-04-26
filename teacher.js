@@ -71,6 +71,11 @@ window.logout = async () => {
   window.location.href = "index.html";
 };
 
+window.goToAttendance = () => {
+  window.location.href = "attendance.html";
+};
+
+
 // =========================
 // 🌙 DARK MODE
 // =========================
