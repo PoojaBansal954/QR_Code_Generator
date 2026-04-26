@@ -6,6 +6,7 @@
 }
 
 body {
+  background: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,7 +14,7 @@ body {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.9);
+  background:rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
 
   width: 90%;
