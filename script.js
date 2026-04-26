@@ -11,7 +11,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 // 🔥 Firebase Config
@@ -26,32 +27,38 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // =========================
-// 🔐 AUTO LOGIN (SAFE)
+// 🔐 CONTROLLED AUTO LOGIN
 // =========================
 onAuthStateChanged(auth, async (user) => {
 
-  // Only run on login page
-  const currentPage = window.location.pathname;
+  const currentPage = window.location.pathname.split("/").pop();
 
-  if (!currentPage.includes("index.html") && currentPage !== "/") return;
+if (currentPage !== "index.html" && currentPage !== "") return;
 
+  // ❌ If user not logged in → do nothing
   if (!user) return;
+
+  // ❌ ONLY redirect if explicitly logged in now
+  const justLoggedIn = sessionStorage.getItem("justLoggedIn");
+
+  if (!justLoggedIn) {
+    console.log("User already logged in, but staying on login page");
+    return;
+  }
+
+  sessionStorage.removeItem("justLoggedIn");
 
   const snap = await getDoc(doc(db, "users", user.uid));
   if (!snap.exists()) return;
 
   const role = snap.data().role?.toLowerCase().trim();
 
-  console.log("Auto login role:", role);
+  if (role === "teacher") {
+    window.location.href = "teacher.html";
+  } else if (role === "student") {
+    window.location.href = "student.html";
+  }
 
-  // Delay to avoid conflict with login redirect
-  setTimeout(() => {
-    if (role === "teacher") {
-      window.location.href = "teacher.html";
-    } else if (role === "student") {
-      window.location.href = "student.html";
-    }
-  }, 300);
 });
 
 // =========================
@@ -69,7 +76,7 @@ const loginBtn = document.getElementById("loginBtn");
 const signupLink = document.getElementById("signupLink");
 
 // =========================
-// 🔄 TOGGLE
+// 🔄 TOGGLE LOGIN / SIGNUP
 // =========================
 signupLink.addEventListener("click", () => {
 
@@ -111,10 +118,10 @@ loginBtn.addEventListener("click", async () => {
     if (isSignup) {
 
       const name = nameField.value.trim();
-      const role = roleField.value.trim().toLowerCase();
+      const role = roleField.value?.trim().toLowerCase();
 
-      if (!name || !role) {
-        status.innerText = "⚠ Fill all fields";
+      if (!name || !role || (role !== "student" && role !== "teacher")) {
+        status.innerText = "⚠ Select valid role";
         return;
       }
 
@@ -129,18 +136,28 @@ loginBtn.addEventListener("click", async () => {
 
       status.innerText = "✅ Account created";
 
-      // Redirect
+      // clear fields
+      emailField.value = "";
+      passwordField.value = "";
+      nameField.value = "";
+      roleField.value = "";
+
+      // redirect
       if (role === "teacher") {
         window.location.href = "teacher.html";
       } else {
         window.location.href = "student.html";
       }
+
     }
 
     // =========================
     // 🔐 LOGIN
     // =========================
     else {
+
+      // 🔥 SET FLAG FIRST
+      sessionStorage.setItem("justLoggedIn", "true");
 
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
@@ -149,6 +166,7 @@ loginBtn.addEventListener("click", async () => {
 
       if (!snap.exists()) {
         status.innerText = "❌ User data missing";
+        sessionStorage.removeItem("justLoggedIn");
         return;
       }
 
@@ -156,7 +174,10 @@ loginBtn.addEventListener("click", async () => {
 
       console.log("Login role:", role);
 
-      // 🔥 STRICT ROLE NAVIGATION
+      // clear inputs
+      emailField.value = "";
+      passwordField.value = "";
+
       if (role === "teacher") {
         window.location.href = "teacher.html";
 
@@ -165,11 +186,20 @@ loginBtn.addEventListener("click", async () => {
 
       } else {
         status.innerText = "❌ Invalid role in DB";
+        sessionStorage.removeItem("justLoggedIn");
       }
     }
 
   } catch (error) {
+    sessionStorage.removeItem("justLoggedIn");
     status.innerText = error.message;
   }
 
 });
+// =========================
+// 🚪 FORCE LOGOUT (FOR TESTING)
+// =========================
+window.forceLogout = async () => {
+  await signOut(auth);
+  alert("Logged out successfully");
+};
