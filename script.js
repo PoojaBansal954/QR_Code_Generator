@@ -10,10 +10,11 @@ import {
 import {
   getAuth,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-//  Firebase Config
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -24,36 +25,38 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
+// =========================
+// 🔐 AUTO LOGIN (SAFE)
+// =========================
 onAuthStateChanged(auth, async (user) => {
 
-  //  If NOT logged in → stay on login page
+  // Only run on login page
+  const currentPage = window.location.pathname;
+
+  if (!currentPage.includes("index.html") && currentPage !== "/") return;
+
   if (!user) return;
 
   const snap = await getDoc(doc(db, "users", user.uid));
-
   if (!snap.exists()) return;
 
   const role = snap.data().role?.toLowerCase().trim();
 
-  console.log("AUTO LOGIN ROLE:", role);
+  console.log("Auto login role:", role);
 
-  const currentPage = window.location.pathname;
-
-  // ONLY redirect if user is on login page
-  if (currentPage.includes("index.html") || currentPage === "/") {
-
-    if (role === "student") {
-      window.location.href = "student.html";
-
-    } else if (role === "teacher") {
+  // Delay to avoid conflict with login redirect
+  setTimeout(() => {
+    if (role === "teacher") {
       window.location.href = "teacher.html";
+    } else if (role === "student") {
+      window.location.href = "student.html";
     }
-  }
+  }, 300);
 });
 
-//  MODE CONTROL
+// =========================
+// 🔄 MODE CONTROL
+// =========================
 let isSignup = false;
 
 // UI Elements
@@ -66,7 +69,7 @@ const loginBtn = document.getElementById("loginBtn");
 const signupLink = document.getElementById("signupLink");
 
 // =========================
-//  TOGGLE LOGIN / SIGNUP
+// 🔄 TOGGLE
 // =========================
 signupLink.addEventListener("click", () => {
 
@@ -87,9 +90,9 @@ signupLink.addEventListener("click", () => {
   status.innerText = "";
 });
 
-// MAIN BUTTON (LOGIN / SIGNUP)
-
-
+// =========================
+// 🚀 LOGIN / SIGNUP
+// =========================
 loginBtn.addEventListener("click", async () => {
 
   const email = emailField.value.trim();
@@ -102,8 +105,9 @@ loginBtn.addEventListener("click", async () => {
 
   try {
 
-    //  SIGNUP 
-
+    // =========================
+    // 🔐 SIGNUP
+    // =========================
     if (isSignup) {
 
       const name = nameField.value.trim();
@@ -117,26 +121,25 @@ loginBtn.addEventListener("click", async () => {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
 
-      // Save user in Firestore
       await setDoc(doc(db, "users", user.uid), {
-        name: name,
-        email: email,
-        role: role
+        name,
+        email,
+        role
       });
 
+      status.innerText = "✅ Account created";
 
       // Redirect
-      if (role === "student") {
-        window.location.href = "student.html";
-      } else if (role === "teacher") {
+      if (role === "teacher") {
         window.location.href = "teacher.html";
       } else {
-        status.innerText = "❌ Invalid role";
+        window.location.href = "student.html";
       }
-
     }
 
-    //  LOGIN 
+    // =========================
+    // 🔐 LOGIN
+    // =========================
     else {
 
       const userCred = await signInWithEmailAndPassword(auth, email, password);
@@ -151,15 +154,17 @@ loginBtn.addEventListener("click", async () => {
 
       const role = snap.data().role?.toLowerCase().trim();
 
+      console.log("Login role:", role);
 
-      if (role === "student") {
-        window.location.href = "student.html";
-
-      } else if (role === "teacher") {
+      // 🔥 STRICT ROLE NAVIGATION
+      if (role === "teacher") {
         window.location.href = "teacher.html";
 
+      } else if (role === "student") {
+        window.location.href = "student.html";
+
       } else {
-        status.innerText = "❌ Invalid role in database";
+        status.innerText = "❌ Invalid role in DB";
       }
     }
 

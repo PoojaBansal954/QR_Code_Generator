@@ -14,6 +14,7 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -26,8 +27,9 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-// AUTH 
-
+// =========================
+// 🔐 AUTH CHECK
+// =========================
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -47,50 +49,57 @@ onAuthStateChanged(auth, async (user) => {
   const data = snap.data();
   const role = data.role?.toLowerCase().trim();
 
+  // ❌ Block non-teacher
   if (role !== "teacher") {
     window.location.href = "student.html";
     return;
   }
 
-  document.getElementById("name").innerText = data.name;
-  document.getElementById("email").innerText = data.email;
+  // 👤 UI (safe)
+  const nameEl = document.getElementById("name");
+  const emailEl = document.getElementById("email");
+
+  if (nameEl) nameEl.innerText = data.name;
+  if (emailEl) emailEl.innerText = data.email;
 });
 
-//  NAVIGATION
-
-window.goToGenerateQR = () => window.location.href = "teacher.html";
-window.goToAttendance = () => window.location.href = "attendance.html";
-
-// LOGOUT
-
+// =========================
+// 🚪 LOGOUT
+// =========================
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
 };
 
-//  DARK MODE
-
-
+// =========================
+// 🌙 DARK MODE
+// =========================
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
-//  DROPDOWN MENU
+// =========================
+// 👤 MENU
+// =========================
 window.toggleMenu = () => {
   const menu = document.getElementById("menu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
+  if (menu) {
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  }
 };
 
-//  GET LOCATION
-
+// =========================
+// 📍 LOCATION
+// =========================
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-//  QR EXPIRY TIMER 
-
+// =========================
+// ⏳ QR TIMER
+// =========================
 let qrTimeout = null;
 
 function startExpiryTimer(expiryTime) {
@@ -99,6 +108,8 @@ function startExpiryTimer(expiryTime) {
 
   const timerEl = document.getElementById("qrTimer");
 
+  if (!timerEl) return;
+
   qrTimeout = setInterval(() => {
 
     const remaining = expiryTime - Date.now();
@@ -106,7 +117,10 @@ function startExpiryTimer(expiryTime) {
     if (remaining <= 0) {
       timerEl.innerText = "QR Expired ❌";
       clearInterval(qrTimeout);
-      document.getElementById("qrcode").innerHTML = "";
+
+      const qrBox = document.getElementById("qrcode");
+      if (qrBox) qrBox.innerHTML = "";
+
       return;
     }
 
@@ -116,15 +130,31 @@ function startExpiryTimer(expiryTime) {
   }, 1000);
 }
 
-//  GENERATE QR
+// =========================
+// 🚀 INIT AFTER DOM LOAD
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
 
-document.getElementById("generateQRBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("generateQRBtn");
 
-  const subject = document.getElementById("subject").value.trim();
-  const duration = document.getElementById("duration").value.trim();
+  if (!btn) {
+    console.error("generateQRBtn not found");
+    return;
+  }
+
+  btn.addEventListener("click", generateQR);
+});
+
+// =========================
+// 🎯 GENERATE QR
+// =========================
+async function generateQR() {
+
+  const subject = document.getElementById("subject")?.value.trim();
+  const duration = document.getElementById("duration")?.value.trim();
 
   if (!subject || !duration) {
-    alert("Please fill all fields ");
+    alert("Please fill all fields ❌");
     return;
   }
 
@@ -139,10 +169,10 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       duration,
       teacherLat: position.coords.latitude,
       teacherLon: position.coords.longitude,
-      expiry: expiryTime // 🔥 IMPORTANT
+      expiry: expiryTime
     };
 
-    //  Save lecture
+    // 🔥 Save lecture
     await addDoc(collection(db, "lectures"), {
       subject,
       duration,
@@ -151,20 +181,25 @@ document.getElementById("generateQRBtn").addEventListener("click", async () => {
       expiry: expiryTime
     });
 
-    // Generate QR
-    document.getElementById("qrcode").innerHTML = "";
+    // 🎥 Generate QR
+    const qrBox = document.getElementById("qrcode");
+    if (qrBox) qrBox.innerHTML = "";
+
+    if (typeof QRCode === "undefined") {
+      alert("QR library missing ❌");
+      return;
+    }
 
     QRCode.toCanvas(JSON.stringify(qrData), (err, canvas) => {
-      if (!err) {
-        document.getElementById("qrcode").appendChild(canvas);
+      if (!err && qrBox) {
+        qrBox.appendChild(canvas);
       }
     });
 
-    //  Start timer UI
     startExpiryTimer(expiryTime);
 
   } catch (err) {
     console.error(err);
     alert("Location permission required ❌");
   }
-});
+}
