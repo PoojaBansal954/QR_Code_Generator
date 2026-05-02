@@ -14,7 +14,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 🔥 Firebase Config
+//  Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -30,9 +30,8 @@ let currentName = "";
 let html5QrCode = null;
 let scanning = false;
 
-// ==========================
-// 🔐 AUTH + ROLE CHECK
-// ==========================
+//  AUTH + ROLE CHECK
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -52,7 +51,7 @@ onAuthStateChanged(auth, async (user) => {
   const data = snap.data();
   const role = data.role?.toLowerCase().trim();
 
-  // ❌ Block teacher
+  //  Block teacher
   if (role !== "student") {
     window.location.href = "teacher.html";
     return;
@@ -68,9 +67,8 @@ onAuthStateChanged(auth, async (user) => {
   startScanner();
 });
 
-// ==========================
-// 📷 START SCANNER (BACK CAM)
-// ==========================
+//  START SCANNER (BACK CAMERA)
+
 async function startScanner() {
 
   if (scanning) return;
@@ -85,7 +83,7 @@ async function startScanner() {
       return;
     }
 
-    // 🔥 BETTER CAMERA SELECTION
+    //  BETTER CAMERA SELECTION
     let backCamera = devices.find(d =>
       d.label.toLowerCase().includes("back") ||
       d.label.toLowerCase().includes("rear") ||
@@ -114,9 +112,8 @@ async function startScanner() {
   }
 }
 
-// ==========================
-// ✅ QR SCAN SUCCESS
-// ==========================
+// QR SCAN SUCCESS
+
 async function onScanSuccess(decodedText) {
 
   if (!scanning) return;
@@ -131,7 +128,7 @@ async function onScanSuccess(decodedText) {
 
     const data = JSON.parse(decodedText);
 
-    // 🔥 QR EXPIRY CHECK
+    // QR EXPIRY CHECK
     if (data.expiry && Date.now() > data.expiry) {
       document.getElementById("status").innerText = "❌ QR Expired";
       restartScanner();
@@ -149,13 +146,13 @@ async function onScanSuccess(decodedText) {
 
     if (distance > 100) {
       document.getElementById("status").innerText =
-        `❌ Too far (${Math.round(distance)}m)`;
+        `Too far (${Math.round(distance)}m)`;
 
       restartScanner();
       return;
     }
 
-    // ✅ SUCCESS
+    // SUCCESS
     document.getElementById("status").innerText = "✅ Attendance Marked";
 
     document.getElementById("result").innerHTML = `
@@ -180,9 +177,8 @@ async function onScanSuccess(decodedText) {
   }
 }
 
-// ==========================
-// 🔁 RESTART SCANNER
-// ==========================
+//  RESTART SCANNER
+
 function restartScanner() {
   setTimeout(() => {
     scanning = false;
@@ -190,18 +186,14 @@ function restartScanner() {
   }, 2000);
 }
 
-// ==========================
-// 📍 LOCATION
-// ==========================
+// LOCATION
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-// ==========================
-// 📏 DISTANCE CALCULATION
-// ==========================
+//  DISTANCE CALCULATION
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const toRad = x => x * Math.PI / 180;
@@ -218,31 +210,27 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// ==========================
-// 🔁 NAVIGATION
-// ==========================
+// NAVIGATION
+
 window.goToAttendance = () => {
   window.location.href = "attendance.html";
 };
 
-// ==========================
-// 🚪 LOGOUT
-// ==========================
+//  LOGOUT
+
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
 };
 
-// ==========================
-// 🌙 DARK MODE
-// ==========================
+//  DARK MODE
+
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
-// ==========================
-// 👤 PROFILE MENU
-// ==========================
+//  PROFILE MENU
+
 window.toggleProfile = () => {
   const dropdown = document.getElementById("profileDropdown");
   dropdown.style.display =

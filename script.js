@@ -15,7 +15,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 🔥 Firebase Config
+//  Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -26,23 +26,20 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// =========================
-// 🔐 CONTROLLED AUTO LOGIN
-// =========================
+
 onAuthStateChanged(auth, async (user) => {
 
   const currentPage = window.location.pathname.split("/").pop();
 
-if (currentPage !== "index.html" && currentPage !== "") return;
+  if (currentPage !== "index.html" && currentPage !== "") return;
 
-  // ❌ If user not logged in → do nothing
+  //  If user not logged in → do nothing
   if (!user) return;
 
-  // ❌ ONLY redirect if explicitly logged in now
+  //  ONLY redirect if explicitly logged in now
   const justLoggedIn = sessionStorage.getItem("justLoggedIn");
 
   if (!justLoggedIn) {
-    console.log("User already logged in, but staying on login page");
     return;
   }
 
@@ -61,12 +58,8 @@ if (currentPage !== "index.html" && currentPage !== "") return;
 
 });
 
-// =========================
-// 🔄 MODE CONTROL
-// =========================
 let isSignup = false;
 
-// UI Elements
 const nameField = document.getElementById("name");
 const roleField = document.getElementById("role");
 const emailField = document.getElementById("email");
@@ -75,9 +68,8 @@ const status = document.getElementById("status");
 const loginBtn = document.getElementById("loginBtn");
 const signupLink = document.getElementById("signupLink");
 
-// =========================
-// 🔄 TOGGLE LOGIN / SIGNUP
-// =========================
+// TOGGLE LOGIN / SIGNUP
+
 signupLink.addEventListener("click", () => {
 
   isSignup = !isSignup;
@@ -97,9 +89,8 @@ signupLink.addEventListener("click", () => {
   status.innerText = "";
 });
 
-// =========================
-// 🚀 LOGIN / SIGNUP
-// =========================
+//  LOGIN / SIGNUP
+
 loginBtn.addEventListener("click", async () => {
 
   const email = emailField.value.trim();
@@ -112,16 +103,25 @@ loginBtn.addEventListener("click", async () => {
 
   try {
 
-    // =========================
-    // 🔐 SIGNUP
-    // =========================
+    //  SIGNUP
+
     if (isSignup) {
 
       const name = nameField.value.trim();
       const role = roleField.value?.trim().toLowerCase();
 
-      if (!name || !role || (role !== "student" && role !== "teacher")) {
-        status.innerText = "⚠ Select valid role";
+      if (!name) {
+        status.innerText = "⚠ Enter your name";
+        return;
+      }
+
+      if (!role) {
+        status.innerText = "⚠ Select a role";
+        return;
+      }
+
+      if (role !== "student" && role !== "teacher") {
+        status.innerText = "⚠ Invalid role";
         return;
       }
 
@@ -134,7 +134,6 @@ loginBtn.addEventListener("click", async () => {
         role
       });
 
-      status.innerText = "✅ Account created";
 
       // clear fields
       emailField.value = "";
@@ -142,63 +141,50 @@ loginBtn.addEventListener("click", async () => {
       nameField.value = "";
       roleField.value = "";
 
-      // redirect
-      if (role === "teacher") {
-        window.location.href = "teacher.html";
-      } else {
-        window.location.href = "student.html";
-      }
-
-    }
-
-    // =========================
-    // 🔐 LOGIN
-    // =========================
-    else {
-
-      // 🔥 SET FLAG FIRST
       sessionStorage.setItem("justLoggedIn", "true");
 
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-
-      const snap = await getDoc(doc(db, "users", user.uid));
-
-      if (!snap.exists()) {
-        status.innerText = "❌ User data missing";
-        sessionStorage.removeItem("justLoggedIn");
-        return;
-      }
-
-      const role = snap.data().role?.toLowerCase().trim();
-
-      console.log("Login role:", role);
-
-      // clear inputs
-      emailField.value = "";
-      passwordField.value = "";
-
-      if (role === "teacher") {
-        window.location.href = "teacher.html";
-
-      } else if (role === "student") {
-        window.location.href = "student.html";
-
-      } else {
-        status.innerText = "❌ Invalid role in DB";
-        sessionStorage.removeItem("justLoggedIn");
-      }
     }
 
-  } catch (error) {
+    // LOGIN
+
+    else {
+
+  const userCred = await signInWithEmailAndPassword(auth, email, password);
+  const user = userCred.user;
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists()) {
+    status.innerText = "User data missing";
+    return;
+  }
+
+  const role = snap.data().role?.toLowerCase().trim();
+
+  if (!role || (role !== "student" && role !== "teacher")) {
+    status.innerText = "Invalid role";
+    return;
+  }
+
+  sessionStorage.setItem("justLoggedIn", "true");
+
+  console.log("Login role:", role);
+
+  // clear inputs
+  emailField.value = "";
+  passwordField.value = "";
+
+
+    }
+  } 
+  catch (error) {
     sessionStorage.removeItem("justLoggedIn");
     status.innerText = error.message;
   }
+ });
 
-});
-// =========================
-// 🚪 FORCE LOGOUT (FOR TESTING)
-// =========================
+//  LOGOUT
+
 window.forceLogout = async () => {
   await signOut(auth);
   alert("Logged out successfully");

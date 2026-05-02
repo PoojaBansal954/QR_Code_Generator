@@ -14,7 +14,7 @@ import {
   collection
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// 🔥 Firebase
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyByRlvtD2ifvCImgiHtvMzoDy9d7DSzfMs",
   authDomain: "attendanceusing-qrcode.firebaseapp.com",
@@ -27,9 +27,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-// =========================
-// 🔐 AUTH CHECK
-// =========================
+//  AUTH CHECK
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -49,13 +47,11 @@ onAuthStateChanged(auth, async (user) => {
   const data = snap.data();
   const role = data.role?.toLowerCase().trim();
 
-  // ❌ Block non-teacher
   if (role !== "teacher") {
     window.location.href = "student.html";
     return;
   }
 
-  // 👤 UI (safe)
   const nameEl = document.getElementById("name");
   const emailEl = document.getElementById("email");
 
@@ -63,9 +59,7 @@ onAuthStateChanged(auth, async (user) => {
   if (emailEl) emailEl.innerText = data.email;
 });
 
-// =========================
-// 🚪 LOGOUT
-// =========================
+//  LOGOUT
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
@@ -76,16 +70,14 @@ window.goToAttendance = () => {
 };
 
 
-// =========================
-// 🌙 DARK MODE
-// =========================
+//  DARK MODE
+
 window.toggleDark = () => {
   document.body.classList.toggle("dark");
 };
 
-// =========================
-// 👤 MENU
-// =========================
+//  MENU
+
 window.toggleMenu = () => {
   const menu = document.getElementById("menu");
   if (menu) {
@@ -93,9 +85,7 @@ window.toggleMenu = () => {
   }
 };
 
-// =========================
-// 📍 LOCATION
-// =========================
+// LOCATION
 function getLocation() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject);
@@ -135,9 +125,7 @@ function startExpiryTimer(expiryTime) {
   }, 1000);
 }
 
-// =========================
-// 🚀 INIT AFTER DOM LOAD
-// =========================
+//  INIT AFTER DOM LOAD
 document.addEventListener("DOMContentLoaded", () => {
 
   const btn = document.getElementById("generateQRBtn");
@@ -150,9 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btn.addEventListener("click", generateQR);
 });
 
-// =========================
-// 🎯 GENERATE QR
-// =========================
+//  GENERATE QR
 async function generateQR() {
 
   const subject = document.getElementById("subject")?.value.trim();
@@ -177,7 +163,7 @@ async function generateQR() {
       expiry: expiryTime
     };
 
-    // 🔥 Save lecture
+    //  Save lecture
     await addDoc(collection(db, "lectures"), {
       subject,
       duration,
