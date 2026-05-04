@@ -16,7 +16,7 @@ body {
   justify-content: center;
 }
 
-/* 🔥 Card */
+/*  Card */
 .card {
   width: 350px;
   max-height: 80vh;   /* ✅ LIMIT HEIGHT */
@@ -29,12 +29,10 @@ body {
   overflow-y: auto;   /* ✅ SCROLL IF NEEDED */
 }
 
-/* 🔥 Heading */
 .card h1 {
   margin-bottom: 10px;
 }
 
-/* 🔥 Inputs */
 input, select {
   width: 100%;
   padding: 10px;      /* reduced */
@@ -43,7 +41,6 @@ input, select {
   border: 1px solid #ccc;
 }
 
-/* 🔥 Button */
 button {
   width: 100%;
   padding: 12px;
