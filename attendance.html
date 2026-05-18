@@ -30,6 +30,28 @@
       margin-bottom: 30px;
     }
 
+    .topbar {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .topbar button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .topbar button:hover {
+      background: #5a67d8;
+    }
+
     .card {
       flex: 1;
       min-width: 200px;
@@ -95,6 +117,11 @@
 </head>
 
 <body>
+
+  <div class="topbar">
+    <button onclick="goToDashboard()">Dashboard</button>
+    <button onclick="logout()">Logout</button>
+  </div>
 
   <div class="container">
 

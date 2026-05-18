@@ -27,10 +27,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser = null;
+let currentRole = "";
 
 function renderTable(snapshot) {
   const tableBody = document.getElementById("tableBody");
   tableBody.innerHTML = "";
+
+  if (snapshot.empty) {
+    tableBody.innerHTML = `<tr><td colspan="6">No attendance records found.</td></tr>`;
+    return;
+  }
 
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -132,6 +138,17 @@ async function loadAll() {
   generateStats(snapshot);
 }
 
+async function loadTeacher(email) {
+  const q = query(
+    collection(db, "attendance"),
+    where("teacherEmail", "==", email)
+  );
+
+  const snapshot = await getDocs(q);
+  renderTable(snapshot);
+  generateStats(snapshot);
+}
+
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -151,23 +168,29 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!docSnap.exists()) return;
 
-  const role = docSnap.data().role;
+  const role = docSnap.data().role?.toLowerCase().trim();
+  currentRole = role;
 
   if (role === "student") {
-
     loadStudent(user.email);
-
-    // hide search safely
-    const searchInput = document.getElementById("searchEmail");
-    const searchBtn = document.getElementById("searchBtn");
-
-    if (searchInput) searchInput.style.display = "none";
-    if (searchBtn) searchBtn.style.display = "none";
-
   } else {
-    loadAll();
+    loadTeacher(user.email);
   }
 });
+
+window.goToDashboard = async () => {
+  if (!currentUser) return;
+
+  const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+  if (!docSnap.exists()) return;
+
+  const role = docSnap.data().role?.toLowerCase().trim();
+  if (role === "student") {
+    window.location.href = "student.html";
+  } else {
+    window.location.href = "teacher.html";
+  }
+};
 
 const searchBtn = document.getElementById("searchBtn");
 

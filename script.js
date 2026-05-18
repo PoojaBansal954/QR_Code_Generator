@@ -31,32 +31,40 @@ onAuthStateChanged(auth, async (user) => {
 
   const currentPage = window.location.pathname.split("/").pop();
 
-  if (currentPage !== "index.html" && currentPage !== "") return;
-
-  //  If user not logged in → do nothing
-  if (!user) return;
-
-  //  ONLY redirect if explicitly logged in now
-  const justLoggedIn = sessionStorage.getItem("justLoggedIn");
-
-  if (!justLoggedIn) {
+  if (!user) {
+    if (currentPage !== "index.html" && currentPage !== "") return;
     return;
   }
 
-  sessionStorage.removeItem("justLoggedIn");
+  if (currentPage !== "index.html" && currentPage !== "") return;
 
   const snap = await getDoc(doc(db, "users", user.uid));
   if (!snap.exists()) return;
 
   const role = snap.data().role?.toLowerCase().trim();
 
+  redirectToRolePage(role);
+
+});
+
+function redirectToRolePage(role) {
   if (role === "teacher") {
     window.location.href = "teacher.html";
   } else if (role === "student") {
     window.location.href = "student.html";
   }
+}
 
-});
+function getFriendlyError(error) {
+  const code = error?.code || "";
+  if (code.includes("auth/email-already-in-use")) return "This email is already registered.";
+  if (code.includes("auth/invalid-email")) return "Enter a valid email address.";
+  if (code.includes("auth/weak-password")) return "Password should be at least 6 characters.";
+  if (code.includes("auth/user-not-found")) return "No account found with this email.";
+  if (code.includes("auth/wrong-password")) return "Incorrect password.";
+  if (code.includes("auth/too-many-requests")) return "Too many attempts. Try again later.";
+  return error?.message || "An unexpected error occurred.";
+}
 
 let isSignup = false;
 
@@ -67,6 +75,12 @@ const passwordField = document.getElementById("password");
 const status = document.getElementById("status");
 const loginBtn = document.getElementById("loginBtn");
 const signupLink = document.getElementById("signupLink");
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    loginBtn.click();
+  }
+});
 
 // TOGGLE LOGIN / SIGNUP
 
@@ -134,14 +148,13 @@ loginBtn.addEventListener("click", async () => {
         role
       });
 
-
       // clear fields
       emailField.value = "";
       passwordField.value = "";
       nameField.value = "";
       roleField.value = "";
 
-      sessionStorage.setItem("justLoggedIn", "true");
+      redirectToRolePage(role);
 
     }
 
@@ -149,37 +162,35 @@ loginBtn.addEventListener("click", async () => {
 
     else {
 
-  const userCred = await signInWithEmailAndPassword(auth, email, password);
-  const user = userCred.user;
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+      const snap = await getDoc(doc(db, "users", user.uid));
 
-  if (!snap.exists()) {
-    status.innerText = "User data missing";
-    return;
-  }
+      if (!snap.exists()) {
+        status.innerText = "User data missing";
+        return;
+      }
 
-  const role = snap.data().role?.toLowerCase().trim();
+      const role = snap.data().role?.toLowerCase().trim();
 
-  if (!role || (role !== "student" && role !== "teacher")) {
-    status.innerText = "Invalid role";
-    return;
-  }
+      if (!role || (role !== "student" && role !== "teacher")) {
+        status.innerText = "Invalid role";
+        return;
+      }
 
-  sessionStorage.setItem("justLoggedIn", "true");
+      console.log("Login role:", role);
 
-  console.log("Login role:", role);
+      // clear inputs
+      emailField.value = "";
+      passwordField.value = "";
 
-  // clear inputs
-  emailField.value = "";
-  passwordField.value = "";
-
+      redirectToRolePage(role);
 
     }
   } 
   catch (error) {
-    sessionStorage.removeItem("justLoggedIn");
-    status.innerText = error.message;
+    status.innerText = getFriendlyError(error);
   }
  });
 

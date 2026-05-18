@@ -69,6 +69,9 @@ window.goToAttendance = () => {
   window.location.href = "attendance.html";
 };
 
+window.goToGenerateQR = () => {
+  document.getElementById("subject")?.focus();
+};
 
 //  DARK MODE
 
@@ -160,7 +163,8 @@ async function generateQR() {
       duration,
       teacherLat: position.coords.latitude,
       teacherLon: position.coords.longitude,
-      expiry: expiryTime
+      expiry: expiryTime,
+      teacherEmail: currentUser?.email || ""
     };
 
     //  Save lecture
