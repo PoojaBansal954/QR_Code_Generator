@@ -167,7 +167,8 @@ async function onScanSuccess(decodedText) {
       subject: data.subject,
       duration: data.duration,
       time: new Date().toLocaleString(),
-      distance: distance
+      distance: distance,
+      teacherEmail: data.teacherEmail || ""
     });
 
   } catch (err) {
@@ -211,6 +212,12 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 // NAVIGATION
+
+window.goToScan = () => {
+  scanning = false;
+  document.getElementById("status").innerText = "Starting scanner...";
+  startScanner();
+};
 
 window.goToAttendance = () => {
   window.location.href = "attendance.html";
