@@ -156,7 +156,7 @@ async function generateQR() {
 
     const position = await getLocation();
 
-    const expiryTime = Date.now() + 2 * 60 * 1000;
+    const expiryTime = Date.now() + 5 * 60 * 1000;
 
     const qrData = {
       subject,
